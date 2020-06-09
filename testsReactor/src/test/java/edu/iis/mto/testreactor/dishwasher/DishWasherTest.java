@@ -1,28 +1,39 @@
 package edu.iis.mto.testreactor.dishwasher;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 import edu.iis.mto.testreactor.dishwasher.engine.Engine;
 import edu.iis.mto.testreactor.dishwasher.pump.WaterPump;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
-class DishWasherTest {
+public class DishWasherTest {
 
-    @Mock WaterPump waterPump;
-    @Mock Engine engine;
-    @Mock DirtFilter dirtFilter;
-    @Mock Door door;
+    private WaterPump waterPump = Mockito.mock(WaterPump.class);
+    private Engine engine = Mockito.mock(Engine.class);
+    private DirtFilter dirtFilter = Mockito.mock(DirtFilter.class);
+    private Door door = Mockito.mock(Door.class);
 
     private DishWasher dishWasher;
     @Before public void setUp() throws Exception {
         dishWasher = new DishWasher(waterPump, engine, dirtFilter, door);
     }
     @Test
-    public void itCompiles() {
-        assertThat(true, Matchers.equalTo(true));
+    public void correctDishWashingShouldResultInSuccess() {
+        ProgramConfiguration programConfiguration = ProgramConfiguration.builder()
+                                                                        .withFillLevel(FillLevel.FULL)
+                                                                        .withProgram(WashingProgram.ECO)
+                                                                        .withTabletsUsed(true)
+                                                                        .build();
+        when(door.closed()).thenReturn(true);
+        when(dirtFilter.capacity()).thenReturn(100d);
+        RunResult runResult = dishWasher.start(programConfiguration);
+        RunResult expectedResult = RunResult.builder().withStatus(Status.SUCCESS).withRunMinutes(90).build();
+        assertEquals(expectedResult.getStatus(), runResult.getStatus());
+        assertEquals(expectedResult.getRunMinutes(), runResult.getRunMinutes());
     }
 
 }
