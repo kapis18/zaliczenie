@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import edu.iis.mto.testreactor.dishwasher.engine.Engine;
+import edu.iis.mto.testreactor.dishwasher.engine.EngineException;
 import edu.iis.mto.testreactor.dishwasher.pump.WaterPump;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +52,7 @@ public class DishWasherTest {
 
     @Test public void filterShouldBeCleanIfTabletsNotUsed() {
         when(door.closed()).thenReturn(true);
-        when(dirtFilter.capacity()).thenReturn(incorrectFilterCapacity);
+        when(dirtFilter.capacity()).thenReturn(correctFilterCapacity);
         dishWasher.start(ProgramConfiguration.builder()
                                              .withFillLevel(FillLevel.FULL)
                                              .withProgram(WashingProgram.ECO)
@@ -59,7 +60,18 @@ public class DishWasherTest {
                                              .build());
         verify(dirtFilter, never()).capacity();
     }
+    @Test public void engineExceptionShouldResultInErrorProgram() throws EngineException {
+        when(door.closed()).thenReturn(true);
+        doThrow(EngineException.class).when(engine).runProgram(any());
+        when(dirtFilter.capacity()).thenReturn(correctFilterCapacity);
+        RunResult runResult = dishWasher.start(createProgramConfiguration());
+        assertEquals(Status.ERROR_PROGRAM, runResult.getStatus());
+    }
     private ProgramConfiguration createProgramConfiguration() {
-        return ProgramConfiguration.builder().withFillLevel(FillLevel.FULL).withProgram(WashingProgram.ECO).withTabletsUsed(true).build();
+        return ProgramConfiguration.builder()
+                                   .withFillLevel(FillLevel.FULL)
+                                   .withProgram(WashingProgram.ECO)
+                                   .withTabletsUsed(true)
+                                   .build();
     }
 }
