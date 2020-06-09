@@ -1,7 +1,7 @@
 package edu.iis.mto.testreactor.dishwasher;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import edu.iis.mto.testreactor.dishwasher.engine.Engine;
 import edu.iis.mto.testreactor.dishwasher.pump.WaterPump;
@@ -40,7 +40,8 @@ public class DishWasherTest {
         RunResult expectedResult = RunResult.builder().withStatus(Status.DOOR_OPEN).withRunMinutes(90).build();
         assertEquals(expectedResult.getStatus(), runResult.getStatus());
     }
-    @Test public void ifFilterIsNotCleanShouldReturnErrorFilter(){
+
+    @Test public void ifFilterIsNotCleanShouldReturnErrorFilter() {
         when(door.closed()).thenReturn(true);
         when(dirtFilter.capacity()).thenReturn(incorrectFilterCapacity);
         RunResult runResult = dishWasher.start(createProgramConfiguration());
@@ -48,11 +49,17 @@ public class DishWasherTest {
         assertEquals(expectedResult.getStatus(), runResult.getStatus());
     }
 
+    @Test public void filterShouldBeCleanIfTabletsNotUsed() {
+        when(door.closed()).thenReturn(true);
+        when(dirtFilter.capacity()).thenReturn(incorrectFilterCapacity);
+        dishWasher.start(ProgramConfiguration.builder()
+                                             .withFillLevel(FillLevel.FULL)
+                                             .withProgram(WashingProgram.ECO)
+                                             .withTabletsUsed(false)
+                                             .build());
+        verify(dirtFilter, never()).capacity();
+    }
     private ProgramConfiguration createProgramConfiguration() {
-        return ProgramConfiguration.builder()
-                                   .withFillLevel(FillLevel.FULL)
-                                   .withProgram(WashingProgram.ECO)
-                                   .withTabletsUsed(true)
-                                   .build();
+        return ProgramConfiguration.builder().withFillLevel(FillLevel.FULL).withProgram(WashingProgram.ECO).withTabletsUsed(true).build();
     }
 }
