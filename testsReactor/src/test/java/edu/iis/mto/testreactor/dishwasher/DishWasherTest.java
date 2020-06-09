@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import edu.iis.mto.testreactor.dishwasher.engine.Engine;
 import edu.iis.mto.testreactor.dishwasher.engine.EngineException;
+import edu.iis.mto.testreactor.dishwasher.pump.PumpException;
 import edu.iis.mto.testreactor.dishwasher.pump.WaterPump;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +67,13 @@ public class DishWasherTest {
         when(dirtFilter.capacity()).thenReturn(correctFilterCapacity);
         RunResult runResult = dishWasher.start(createProgramConfiguration());
         assertEquals(Status.ERROR_PROGRAM, runResult.getStatus());
+    }
+    @Test public void pumpExceptionShouldResultInErrorPump() throws PumpException {
+        when(door.closed()).thenReturn(true);
+        doThrow(PumpException.class).when(waterPump).drain();
+        when(dirtFilter.capacity()).thenReturn(correctFilterCapacity);
+        RunResult runResult = dishWasher.start(createProgramConfiguration());
+        assertEquals(Status.ERROR_PUMP, runResult.getStatus());
     }
     private ProgramConfiguration createProgramConfiguration() {
         return ProgramConfiguration.builder()
